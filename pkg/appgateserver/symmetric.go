@@ -10,6 +10,7 @@ import (
 	"github.com/cometbft/cometbft/crypto"
 
 	"github.com/pokt-network/poktroll/pkg/partials"
+	"github.com/pokt-network/poktroll/pkg/signer"
 	"github.com/pokt-network/poktroll/x/service/types"
 )
 
@@ -53,10 +54,11 @@ func (app *appGateServer) handleSymmetricRelay(
 	}
 
 	// Get the application's signer.
-	signer, err := app.getRingSingerForAppAddress(ctx, appAddress)
+	appRing, err := app.ringCache.GetRingForAddress(ctx, appAddress)
 	if err != nil {
-		return ErrAppGateHandleRelay.Wrapf("getting signer: %s", err)
+		return ErrAppGateHandleRelay.Wrapf("getting app ring: %s", err)
 	}
+	signer := signer.NewRingSigner(appRing, app.signingInformation.SigningKey)
 
 	// Hash and sign the request's signable bytes.
 	signableBz, err := relayRequest.GetSignableBytes()
