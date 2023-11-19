@@ -120,6 +120,8 @@ func setupRelayerDependencies(
 		supplyMiner, // leaf
 		config.NewSupplyQueryClientContextFn(flagQueryNodeUrl), // leaf
 		supplyTxClientContext, // leaf
+		config.NewAccountQuerierFn(),
+		config.NewApplicationQuerierFn(),
 		config.NewSupplyRingCacheFn(),
 		supplyTxFactory,
 		supplyTxContext,

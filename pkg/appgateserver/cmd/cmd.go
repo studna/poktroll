@@ -131,7 +131,9 @@ func setupAppGateServerDependencies(
 	supplierFuncs := []config.SupplierFn{
 		config.NewSupplyEventsQueryClientFn(pocketNodeWebsocketUrl),
 		config.NewSupplyBlockClientFn(pocketNodeWebsocketUrl),
-		config.NewSupplyQueryClientContextFn(flagQueryNodeUrl),
+		config.NewSupplyQueryClientContextFn(flagQueryNodeUrl), // leaf
+		config.NewAccountQuerierFn(),
+		config.NewApplicationQuerierFn(),
 		config.NewSupplyRingCacheFn(),
 	}
 
