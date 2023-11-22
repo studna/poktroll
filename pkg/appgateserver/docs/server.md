@@ -257,10 +257,8 @@ to produce valid signatures.
 
 _NOTE: Ring cache invalidation is not currently implemented_
 
-<!-- TODO(@h5law): Update this link when the ring cache package is merged -->
-
-See [rings.go](../rings.go) for more details on the implementation of ring
-creation.
+See [rings.go](../../crypto/rings/cache.go) for more details on the
+implementation of ring creation.
 
 #### Ring Signatures
 
