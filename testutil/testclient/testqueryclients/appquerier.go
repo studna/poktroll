@@ -38,7 +38,7 @@ func NewTestApplicationQueryClient(
 	applicationQuerier := mockclient.NewMockApplicationQueryClient(ctrl)
 	applicationQuerier.EXPECT().GetApplication(gomock.Any(), gomock.Any()).
 		DoAndReturn(func(
-			ctx context.Context,
+			_ context.Context,
 			appAddress string,
 		) (application *types.Application, err error) {
 			delegateeNumber, ok := addressApplicationMap[appAddress]
@@ -51,7 +51,9 @@ func NewTestApplicationQueryClient(
 				delegateeGatewayAddresses = append(delegateeGatewayAddresses, gatewayAddress)
 				addAddressToAccountMap(t, gatewayAddress)
 			}
-			return &apptypes.Application{
+			t.Logf("DEBUG: AccMap: %+v", addressAccountMap)
+			t.Logf("DEBUG: AppMap: %+v", addressApplicationMap)
+			app := &apptypes.Application{
 				Address: appAddress,
 				Stake:   &sdk.Coin{Denom: "upokt", Amount: sdk.NewInt(100)},
 				ServiceConfigs: []*sharedtypes.ApplicationServiceConfig{
@@ -63,7 +65,9 @@ func NewTestApplicationQueryClient(
 					},
 				},
 				DelegateeGatewayAddresses: delegateeGatewayAddresses,
-			}, nil
+			}
+			t.Logf("DEBUG: Application: %+v", app)
+			return app, nil
 		}).
 		AnyTimes()
 

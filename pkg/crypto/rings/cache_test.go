@@ -56,6 +56,7 @@ func TestRingCache_BuildRing(t *testing.T) {
 				require.ErrorAs(t, err, &test.expectedErr)
 				return
 			}
+			t.Logf("DEBUG: Ring: %+v", ring)
 			require.NoError(t, err)
 			require.Equal(t, test.expectedSize, ring.Size())
 		})
