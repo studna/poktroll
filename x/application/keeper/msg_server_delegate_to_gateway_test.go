@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -56,6 +57,11 @@ func TestMsgServer_DelegateToGateway_SuccessfullyDelegate(t *testing.T) {
 	// Delegate the application to the gateway
 	_, err = srv.DelegateToGateway(wctx, delegateMsg)
 	require.NoError(t, err)
+	events := ctx.EventManager().Events()
+	require.Equal(t, 1, len(events))
+	require.Equal(t, "pocket.application.EventDelegateeChange", events[0].Type)
+	require.Equal(t, "app_address", events[0].Attributes[0].Key)
+	require.Equal(t, fmt.Sprintf("\"%s\"", appAddr), events[0].Attributes[0].Value)
 
 	// Verify that the application exists
 	foundApp, isAppFound := k.GetApplication(ctx, appAddr)
@@ -73,6 +79,11 @@ func TestMsgServer_DelegateToGateway_SuccessfullyDelegate(t *testing.T) {
 	// Delegate the application to the second gateway
 	_, err = srv.DelegateToGateway(wctx, delegateMsg2)
 	require.NoError(t, err)
+	events = ctx.EventManager().Events()
+	require.Equal(t, 2, len(events))
+	require.Equal(t, "pocket.application.EventDelegateeChange", events[1].Type)
+	require.Equal(t, "app_address", events[1].Attributes[0].Key)
+	require.Equal(t, fmt.Sprintf("\"%s\"", appAddr), events[1].Attributes[0].Value)
 	foundApp, isAppFound = k.GetApplication(ctx, appAddr)
 	require.True(t, isAppFound)
 	require.Equal(t, 2, len(foundApp.DelegateeGatewayAddresses))
@@ -120,6 +131,11 @@ func TestMsgServer_DelegateToGateway_FailDuplicate(t *testing.T) {
 	// Delegate the application to the gateway
 	_, err = srv.DelegateToGateway(wctx, delegateMsg)
 	require.NoError(t, err)
+	events := ctx.EventManager().Events()
+	require.Equal(t, 1, len(events))
+	require.Equal(t, "pocket.application.EventDelegateeChange", events[0].Type)
+	require.Equal(t, "app_address", events[0].Attributes[0].Key)
+	require.Equal(t, fmt.Sprintf("\"%s\"", appAddr), events[0].Attributes[0].Value)
 
 	// Verify that the application exists
 	foundApp, isAppFound := k.GetApplication(ctx, appAddr)
@@ -137,6 +153,8 @@ func TestMsgServer_DelegateToGateway_FailDuplicate(t *testing.T) {
 	// Attempt to delegate the application to the gateway again
 	_, err = srv.DelegateToGateway(wctx, delegateMsg2)
 	require.ErrorIs(t, err, types.ErrAppAlreadyDelegated)
+	events = ctx.EventManager().Events()
+	require.Equal(t, 1, len(events))
 	foundApp, isAppFound = k.GetApplication(ctx, appAddr)
 	require.True(t, isAppFound)
 	require.Equal(t, 1, len(foundApp.DelegateeGatewayAddresses))
@@ -242,10 +260,19 @@ func TestMsgServer_DelegateToGateway_FailMaxReached(t *testing.T) {
 		require.True(t, isAppFound)
 		require.Equal(t, int(i+1), len(foundApp.DelegateeGatewayAddresses))
 	}
+	events := ctx.EventManager().Events()
+	require.Equal(t, int(maxDelegatedParam), len(events))
+	for _, event := range events {
+		require.Equal(t, "pocket.application.EventDelegateeChange", event.Type)
+		require.Equal(t, "app_address", event.Attributes[0].Key)
+		require.Equal(t, fmt.Sprintf("\"%s\"", appAddr), event.Attributes[0].Value)
+	}
 
 	// Attempt to delegate the application when the max is already reached
 	_, err = srv.DelegateToGateway(wctx, delegateMsg)
 	require.ErrorIs(t, err, types.ErrAppMaxDelegatedGateways)
+	events = ctx.EventManager().Events()
+	require.Equal(t, int(maxDelegatedParam), len(events))
 	foundApp, isAppFound := k.GetApplication(ctx, appAddr)
 	require.True(t, isAppFound)
 	require.Equal(t, maxDelegatedParam, int64(len(foundApp.DelegateeGatewayAddresses)))
