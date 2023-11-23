@@ -179,7 +179,7 @@ func TestMsgServer_UndelegateFromGateway_SuccessfullyUndelegateFromUnstakedGatew
 	appAddr := sample.AccAddress()
 	gatewayAddr := sample.AccAddress()
 	// Mock the gateway being staked via the staked gateway map
-	keepertest.RemoveGatewayFromStakedGatewayMap(t, gatewayAddr)
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -220,7 +220,7 @@ func TestMsgServer_UndelegateFromGateway_SuccessfullyUndelegateFromUnstakedGatew
 	require.Equal(t, gatewayAddr, foundApp.DelegateeGatewayAddresses[0])
 
 	// Mock unstaking the gateway
-	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
+	keepertest.RemoveGatewayFromStakedGatewayMap(t, gatewayAddr)
 
 	// Prepare an undelegation message
 	undelegateMsg := &types.MsgUndelegateFromGateway{
