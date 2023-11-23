@@ -26,14 +26,9 @@ func TestMsgServer_UndelegateFromGateway_SuccessfullyUndelegate(t *testing.T) {
 	for i := 0; i < len(gatewayAddresses); i++ {
 		gatewayAddr := sample.AccAddress()
 		// Mock the gateway being staked via the staked gateway map
-		keepertest.StakedGatewayMap[gatewayAddr] = struct{}{}
+		keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
 		gatewayAddresses[i] = gatewayAddr
 	}
-	t.Cleanup(func() {
-		for _, gatewayAddr := range gatewayAddresses {
-			delete(keepertest.StakedGatewayMap, gatewayAddr)
-		}
-	})
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -113,12 +108,8 @@ func TestMsgServer_UndelegateFromGateway_FailNotDelegated(t *testing.T) {
 	gatewayAddr1 := sample.AccAddress()
 	gatewayAddr2 := sample.AccAddress()
 	// Mock the gateway being staked via the staked gateway map
-	keepertest.StakedGatewayMap[gatewayAddr1] = struct{}{}
-	keepertest.StakedGatewayMap[gatewayAddr2] = struct{}{}
-	t.Cleanup(func() {
-		delete(keepertest.StakedGatewayMap, gatewayAddr1)
-		delete(keepertest.StakedGatewayMap, gatewayAddr2)
-	})
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr1)
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr2)
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -188,7 +179,7 @@ func TestMsgServer_UndelegateFromGateway_SuccessfullyUndelegateFromUnstakedGatew
 	appAddr := sample.AccAddress()
 	gatewayAddr := sample.AccAddress()
 	// Mock the gateway being staked via the staked gateway map
-	keepertest.StakedGatewayMap[gatewayAddr] = struct{}{}
+	keepertest.RemoveGatewayFromStakedGatewayMap(t, gatewayAddr)
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -229,7 +220,7 @@ func TestMsgServer_UndelegateFromGateway_SuccessfullyUndelegateFromUnstakedGatew
 	require.Equal(t, gatewayAddr, foundApp.DelegateeGatewayAddresses[0])
 
 	// Mock unstaking the gateway
-	delete(keepertest.StakedGatewayMap, gatewayAddr)
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
 
 	// Prepare an undelegation message
 	undelegateMsg := &types.MsgUndelegateFromGateway{

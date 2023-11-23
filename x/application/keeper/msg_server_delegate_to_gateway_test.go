@@ -24,12 +24,8 @@ func TestMsgServer_DelegateToGateway_SuccessfullyDelegate(t *testing.T) {
 	gatewayAddr1 := sample.AccAddress()
 	gatewayAddr2 := sample.AccAddress()
 	// Mock the gateway being staked via the staked gateway map
-	keepertest.StakedGatewayMap[gatewayAddr1] = struct{}{}
-	keepertest.StakedGatewayMap[gatewayAddr2] = struct{}{}
-	t.Cleanup(func() {
-		delete(keepertest.StakedGatewayMap, gatewayAddr1)
-		delete(keepertest.StakedGatewayMap, gatewayAddr2)
-	})
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr1)
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr2)
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -100,10 +96,7 @@ func TestMsgServer_DelegateToGateway_FailDuplicate(t *testing.T) {
 	appAddr := sample.AccAddress()
 	gatewayAddr := sample.AccAddress()
 	// Mock the gateway being staked via the staked gateway map
-	keepertest.StakedGatewayMap[gatewayAddr] = struct{}{}
-	t.Cleanup(func() {
-		delete(keepertest.StakedGatewayMap, gatewayAddr)
-	})
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -210,10 +203,7 @@ func TestMsgServer_DelegateToGateway_FailMaxReached(t *testing.T) {
 	appAddr := sample.AccAddress()
 	gatewayAddr := sample.AccAddress()
 	// Mock the gateway being staked via the staked gateway map
-	keepertest.StakedGatewayMap[gatewayAddr] = struct{}{}
-	t.Cleanup(func() {
-		delete(keepertest.StakedGatewayMap, gatewayAddr)
-	})
+	keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
 
 	// Prepare the application
 	stakeMsg := &types.MsgStakeApplication{
@@ -244,10 +234,7 @@ func TestMsgServer_DelegateToGateway_FailMaxReached(t *testing.T) {
 		// Prepare the delegation message
 		gatewayAddr := sample.AccAddress()
 		// Mock the gateway being staked via the staked gateway map
-		keepertest.StakedGatewayMap[gatewayAddr] = struct{}{}
-		t.Cleanup(func() {
-			delete(keepertest.StakedGatewayMap, gatewayAddr)
-		})
+		keepertest.AddGatewayToStakedGatewayMap(t, gatewayAddr)
 		delegateMsg := &types.MsgDelegateToGateway{
 			AppAddress:     appAddr,
 			GatewayAddress: gatewayAddr,
