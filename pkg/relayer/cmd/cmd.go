@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/url"
 
 	"cosmossdk.io/depinject"
@@ -16,6 +15,8 @@ import (
 	"github.com/pokt-network/poktroll/pkg/client/supplier"
 	"github.com/pokt-network/poktroll/pkg/client/tx"
 	"github.com/pokt-network/poktroll/pkg/deps/config"
+	"github.com/pokt-network/poktroll/pkg/polylog"
+	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 	"github.com/pokt-network/poktroll/pkg/relayer"
 	"github.com/pokt-network/poktroll/pkg/relayer/miner"
 	"github.com/pokt-network/poktroll/pkg/relayer/proxy"
@@ -74,6 +75,11 @@ func runRelayer(cmd *cobra.Command, _ []string) error {
 	// Ensure context cancellation.
 	defer cancelCtx()
 
+	// Construct a logger and associate it with the command context.
+	logger := polyzero.NewLogger()
+	ctx = polylog.WithContext(ctx, logger)
+	cmd.SetContext(ctx)
+
 	// Handle interrupt and kill signals asynchronously.
 	signals.GoOnExitSignal(cancelCtx)
 
@@ -91,12 +97,12 @@ func runRelayer(cmd *cobra.Command, _ []string) error {
 	}
 
 	// Start the relay miner
-	log.Println("INFO: Starting relay miner...")
+	logger.Info().Msg("Starting relay miner...")
 	if err := relayMiner.Start(ctx); err != nil {
 		return err
 	}
 
-	log.Println("INFO: Relay miner stopped; exiting")
+	logger.Info().Msg("Relay miner stopped; exiting")
 	return nil
 }
 

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 
@@ -16,16 +15,18 @@ import (
 	"github.com/pokt-network/poktroll/cmd/signals"
 	"github.com/pokt-network/poktroll/pkg/appgateserver"
 	"github.com/pokt-network/poktroll/pkg/deps/config"
+	"github.com/pokt-network/poktroll/pkg/polylog"
+	"github.com/pokt-network/poktroll/pkg/polylog/polyzero"
 )
 
 // We're `explicitly omitting default` so that the appgateserver crashes if these aren't specified.
 const omittedDefaultFlagValue = "explicitly omitting default"
 
 var (
-	flagSigningKey        string
-	flagSelfSigning       bool
-	flagListeningEndpoint string
-	flagQueryNodeUrl      string
+	flagSigningKey     string
+	flagSelfSigning    bool
+	flagListenEndpoint string
+	flagQueryNodeUrl   string
 )
 
 func AppGateServerCmd() *cobra.Command {
@@ -59,7 +60,7 @@ relays to the AppGate server and function as an Application, provided that:
 
 	// Custom flags
 	cmd.Flags().StringVar(&flagSigningKey, "signing-key", "", "The name of the key that will be used to sign relays")
-	cmd.Flags().StringVar(&flagListeningEndpoint, "listening-endpoint", "http://localhost:42069", "The host and port that the appgate server will listen on")
+	cmd.Flags().StringVar(&flagListenEndpoint, "listening-endpoint", "http://localhost:42069", "The host and port that the appgate server will listen on")
 	cmd.Flags().BoolVar(&flagSelfSigning, "self-signing", false, "Whether the server should sign all incoming requests with its own ring (for applications)")
 	cmd.Flags().StringVar(&flagQueryNodeUrl, "query-node", omittedDefaultFlagValue, "tcp://<host>:<port> to a full pocket node for reading data and listening for on-chain events")
 
@@ -75,11 +76,16 @@ func runAppGateServer(cmd *cobra.Command, _ []string) error {
 	ctx, cancelCtx := context.WithCancel(cmd.Context())
 	defer cancelCtx()
 
+	// Construct a logger and associate it with the command context.
+	logger := polyzero.NewLogger()
+	ctx = polylog.WithContext(ctx, logger)
+	cmd.SetContext(ctx)
+
 	// Handle interrupt and kill signals asynchronously.
 	signals.GoOnExitSignal(cancelCtx)
 
 	// Parse the listening endpoint.
-	listeningUrl, err := url.Parse(flagListeningEndpoint)
+	listenUrl, err := url.Parse(flagListenEndpoint)
 	if err != nil {
 		return fmt.Errorf("failed to parse listening endpoint: %w", err)
 	}
@@ -90,7 +96,7 @@ func runAppGateServer(cmd *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to setup AppGate server dependencies: %w", err)
 	}
 
-	log.Println("INFO: Creating AppGate server...")
+	logger.Info().Msg("Creating AppGate server...")
 
 	// Create the AppGate server.
 	appGateServer, err := appgateserver.NewAppGateServer(
@@ -102,19 +108,21 @@ func runAppGateServer(cmd *cobra.Command, _ []string) error {
 			// with its own ring (for applications) or not (for gateways)
 			SelfSigning: flagSelfSigning,
 		}),
-		appgateserver.WithListeningUrl(listeningUrl),
+		appgateserver.WithListeningUrl(listenUrl),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create AppGate server: %w", err)
 	}
 
-	log.Printf("INFO: Starting AppGate server, listening on %s...", listeningUrl.String())
+	logger.Info().
+		Str("listen_url", listenUrl.String()).
+		Msg("Starting AppGate server...")
 
 	// Start the AppGate server.
 	if err := appGateServer.Start(ctx); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf("failed to start app gate server: %w", err)
 	} else if errors.Is(err, http.ErrServerClosed) {
-		log.Println("INFO: AppGate server stopped")
+		logger.Info().Msg("AppGate server stopped")
 	}
 
 	return nil

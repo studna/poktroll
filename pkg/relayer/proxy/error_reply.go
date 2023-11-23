@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/pokt-network/poktroll/x/service/types"
@@ -32,12 +31,12 @@ func (jsrv *jsonRPCServer) replyWithError(writer http.ResponseWriter, err error)
 
 	relayResponseBz, err := relayResponse.Marshal()
 	if err != nil {
-		log.Printf("ERROR: failed marshaling relay response: %s", err)
+		jsrv.logger.Error().Err(err).Msg("failed marshaling relay response")
 		return
 	}
 
 	if _, err = writer.Write(relayResponseBz); err != nil {
-		log.Printf("ERROR: failed writing relay response: %s", err)
+		jsrv.logger.Error().Err(err).Msg("failed writing relay response")
 		return
 	}
 }

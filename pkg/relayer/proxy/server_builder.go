@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"context"
-	"log"
 	"net/url"
 
 	"github.com/pokt-network/poktroll/pkg/relayer"
@@ -50,15 +49,16 @@ func (rp *relayerProxy) BuildProvidedServices(ctx context.Context) error {
 
 			var server relayer.RelayServer
 
-			log.Printf(
-				"INFO: starting relay server for service %s at endpoint %s",
-				service.Id, endpoint.Url,
-			)
+			rp.logger.Info().
+				Str("service_id", service.Id).
+				Str("endpoint_url", endpoint.Url).
+				Msg("starting relay server")
 
 			// Switch to the RPC type to create the appropriate RelayServer
 			switch endpoint.RpcType {
 			case sharedtypes.RPCType_JSON_RPC:
 				server = NewJSONRPCServer(
+					rp.logger,
 					service,
 					supplierEndpointHost,
 					proxiedServicesEndpoints,

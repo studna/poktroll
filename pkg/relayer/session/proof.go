@@ -76,7 +76,7 @@ func (rs *relayerSessionsManager) waitForEarliestSubmitProofHeight(
 	log.Printf("INFO: waiting and blocking for global earliest proof submission submitProofWindowStartBlock height: %d", submitProofWindowStartHeight)
 	submitProofWindowStartBlock := rs.waitForBlock(ctx, submitProofWindowStartHeight)
 
-	earliestSubmitProofHeight := protocol.GetEarliestSubmitProofHeight(submitProofWindowStartBlock)
+	earliestSubmitProofHeight := protocol.GetEarliestSubmitProofHeight(ctx, submitProofWindowStartBlock)
 	_ = rs.waitForBlock(ctx, earliestSubmitProofHeight)
 }
 

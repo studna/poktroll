@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/pokt-network/poktroll/x/service/types"
@@ -16,7 +15,8 @@ func (jsrv *jsonRPCServer) newRelayRequest(request *http.Request) (*types.RelayR
 		return nil, err
 	}
 
-	log.Printf("DEBUG: Unmarshaling relay request...")
+	jsrv.logger.Debug().Msg("unmarshaling relay request")
+
 	var relayReq types.RelayRequest
 	if err := relayReq.Unmarshal(requestBz); err != nil {
 		return nil, err
@@ -41,7 +41,8 @@ func (jsrv *jsonRPCServer) newRelayResponse(
 		return nil, err
 	}
 
-	log.Printf("DEBUG: Unmarshaling relay response...")
+	jsrv.logger.Debug().Msg("unmarshaling relay response")
+
 	relayResponsePayload := &types.RelayResponse_JsonRpcPayload{}
 	jsonPayload := &types.JSONRPCResponsePayload{}
 	cdc := types.ModuleCdc
